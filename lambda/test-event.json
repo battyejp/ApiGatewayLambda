@@ -1,0 +1,16 @@
+{
+  "httpMethod": "POST",
+  "path": "/",
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": "{\"firstname\": \"John\", \"lastname\": \"Doe\"}",
+  "isBase64Encoded": false,
+  "requestContext": {
+    "requestId": "test-request-id",
+    "stage": "test",
+    "httpMethod": "POST",
+    "path": "/",
+    "protocol": "HTTP/1.1"
+  }
+}
