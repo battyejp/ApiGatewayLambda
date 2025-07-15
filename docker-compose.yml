@@ -37,6 +37,19 @@ services:
       - AWS_SECRET_ACCESS_KEY=test
       - AWS_DEFAULT_REGION=us-east-1
 
+  consumer:
+    build:
+      context: ./consumerapp
+      dockerfile: Dockerfile
+    depends_on:
+      - api-deployer
+    networks:
+      - localstack-network
+    environment:
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_DEFAULT_REGION=us-east-1
+
 networks:
   localstack-network:
     driver: bridge
