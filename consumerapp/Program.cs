@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using ConsumerApp;
 
 namespace ApiConsumer;
 
@@ -92,7 +93,7 @@ class Program
     {
         try
         {
-            var response = await apiClient!.SendRequestMissingLastNameAsync("John");
+            var response = await apiClient!.SendRequestAsync(new Person{ FirstName = "John" });
             
             Console.WriteLine($"📤 Sending request: {response.RequestJson}");
             Console.WriteLine($"📥 Response Status: {response.StatusCode}");
@@ -117,7 +118,7 @@ class Program
     {
         try
         {
-            var response = await apiClient!.SendRequestMissingFirstNameAsync("Doe");
+            var response = await apiClient!.SendRequestAsync(new Person{ LastName = "Doe" });
             
             Console.WriteLine($"📤 Sending request: {response.RequestJson}");
             Console.WriteLine($"📥 Response Status: {response.StatusCode}");
@@ -142,7 +143,7 @@ class Program
     {
         try
         {
-            var response = await apiClient!.SendValidRequestAsync("John", "Doe");
+            var response = await apiClient!.SendRequestAsync(new Person{ FirstName = "John", LastName = "Doe" });
             
             Console.WriteLine($"📤 Sending request: {response.RequestJson}");
             Console.WriteLine($"📥 Response Status: {response.StatusCode}");

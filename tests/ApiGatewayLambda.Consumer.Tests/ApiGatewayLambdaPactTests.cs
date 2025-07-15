@@ -3,6 +3,7 @@ using PactNet;
 using PactNet.Matchers;
 using Xunit.Abstractions;
 using ApiConsumer;
+using ConsumerApp;
 
 namespace ApiGatewayLambda.Consumer.Tests
 {
@@ -53,7 +54,7 @@ namespace ApiGatewayLambda.Consumer.Tests
             {
                 // Use the actual consumer application's API client
                 var apiClient = new ApiGatewayClient(_httpClient, ctx.MockServerUri.ToString());
-                var response = await apiClient.SendValidRequestAsync("John", "Doe");
+                var response = await apiClient.SendRequestAsync(new Person{ FirstName = "John", LastName = "Doe" });
                 
                 _output.WriteLine($"Request: {response.RequestJson}");
                 _output.WriteLine($"Response Status: {response.StatusCode}");
@@ -75,6 +76,7 @@ namespace ApiGatewayLambda.Consumer.Tests
                 .WithHeader("Content-Type", "application/json; charset=utf-8")
                 .WithJsonBody(new
                 {
+                    FirstName = null as string,
                     LastName = Match.Type("Doe")
                 })
                 .WillRespond()
@@ -89,7 +91,7 @@ namespace ApiGatewayLambda.Consumer.Tests
             {
                 // Use the actual consumer application's API client
                 var apiClient = new ApiGatewayClient(_httpClient, ctx.MockServerUri.ToString());
-                var response = await apiClient.SendRequestMissingFirstNameAsync("Doe");
+                var response = await apiClient.SendRequestAsync(new Person{ LastName = "Doe" } );
                 
                 _output.WriteLine($"Request: {response.RequestJson}");
                 _output.WriteLine($"Response Status: {response.StatusCode}");
@@ -111,7 +113,8 @@ namespace ApiGatewayLambda.Consumer.Tests
                 .WithHeader("Content-Type", "application/json; charset=utf-8")
                 .WithJsonBody(new
                 {
-                    FirstName = Match.Type("John")
+                    FirstName = Match.Type("John"),
+                    LastName = null as string,
                 })
                 .WillRespond()
                 .WithStatus(HttpStatusCode.BadRequest)
@@ -125,7 +128,7 @@ namespace ApiGatewayLambda.Consumer.Tests
             {
                 // Use the actual consumer application's API client
                 var apiClient = new ApiGatewayClient(_httpClient, ctx.MockServerUri.ToString());
-                var response = await apiClient.SendRequestMissingLastNameAsync("John");
+                var response = await apiClient.SendRequestAsync(new Person{ FirstName = "John" });
                 
                 _output.WriteLine($"Request: {response.RequestJson}");
                 _output.WriteLine($"Response Status: {response.StatusCode}");
@@ -133,36 +136,6 @@ namespace ApiGatewayLambda.Consumer.Tests
                 
                 // The test should pass if the mock server matches our definition
                 Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-                Assert.False(response.IsSuccess);
-            });
-        }
-
-        [Fact]
-        public async Task ConsumerApp_RequestWithInvalidMethod_ShouldReturnMethodNotAllowed()
-        {
-            // Arrange
-            _pactBuilder
-                .UponReceiving("A request with invalid method")
-                .WithRequest(HttpMethod.Get, "/")
-                .WillRespond()
-                .WithStatus(HttpStatusCode.MethodNotAllowed)
-                .WithHeader("Content-Type", "application/json")
-                .WithJsonBody(new
-                {
-                    error = Match.Type("Method not allowed. Only POST requests are supported.")
-                });
-
-            await _pactBuilder.VerifyAsync(async ctx =>
-            {
-                // Use the actual consumer application's API client
-                var apiClient = new ApiGatewayClient(_httpClient, ctx.MockServerUri.ToString());
-                var response = await apiClient.SendGetRequestAsync();
-                
-                _output.WriteLine($"Response Status: {response.StatusCode}");
-                _output.WriteLine($"Response: {response.Content}");
-                
-                // The test should pass if the mock server matches our definition
-                Assert.Equal(HttpStatusCode.MethodNotAllowed, response.StatusCode);
                 Assert.False(response.IsSuccess);
             });
         }

@@ -9,6 +9,7 @@
       "request": {
         "body": {
           "content": {
+            "FirstName": null,
             "LastName": "Doe"
           },
           "contentType": "application/json",
@@ -69,7 +70,8 @@
       "request": {
         "body": {
           "content": {
-            "FirstName": "John"
+            "FirstName": "John",
+            "LastName": null
           },
           "contentType": "application/json",
           "encoded": false
