@@ -57,6 +57,20 @@ public class Function
             };
         }
 
+        // Check if X-Market-Id header is present
+        if (request.Headers == null || !request.Headers.ContainsKey("X-Market-Id") || string.IsNullOrWhiteSpace(request.Headers["X-Market-Id"]))
+        {
+            return new APIGatewayProxyResponse
+            {
+                StatusCode = 400,
+                Headers = new Dictionary<string, string>
+                {
+                    ["Content-Type"] = "application/json"
+                },
+                Body = JsonSerializer.Serialize(new { error = "X-Market-Id header is required." })
+            };
+        }
+
         try
         {
             // Parse the JSON request body

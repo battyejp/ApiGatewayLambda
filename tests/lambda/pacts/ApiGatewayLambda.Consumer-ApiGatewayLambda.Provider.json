@@ -4,6 +4,75 @@
   },
   "interactions": [
     {
+      "description": "A request missing X-Market-Id header",
+      "pending": false,
+      "request": {
+        "body": {
+          "content": {
+            "FirstName": "John",
+            "LastName": "Doe"
+          },
+          "contentType": "application/json",
+          "encoded": false
+        },
+        "headers": {
+          "Content-Type": [
+            "application/json; charset=utf-8"
+          ]
+        },
+        "matchingRules": {
+          "body": {
+            "$.FirstName": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.LastName": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            }
+          }
+        },
+        "method": "POST",
+        "path": "/"
+      },
+      "response": {
+        "body": {
+          "content": {
+            "error": "X-Market-Id header is required."
+          },
+          "contentType": "application/json",
+          "encoded": false
+        },
+        "headers": {
+          "Content-Type": [
+            "application/json"
+          ]
+        },
+        "matchingRules": {
+          "body": {
+            "$.error": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            }
+          }
+        },
+        "status": 400
+      },
+      "type": "Synchronous/HTTP"
+    },
+    {
       "description": "A request missing firstname",
       "pending": false,
       "request": {
@@ -18,11 +87,24 @@
         "headers": {
           "Content-Type": [
             "application/json; charset=utf-8"
+          ],
+          "X-Market-Id": [
+            "POL1"
           ]
         },
         "matchingRules": {
           "body": {
             "$.LastName": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            }
+          },
+          "header": {
+            "X-Market-Id": {
               "combine": "AND",
               "matchers": [
                 {
@@ -79,11 +161,24 @@
         "headers": {
           "Content-Type": [
             "application/json; charset=utf-8"
+          ],
+          "X-Market-Id": [
+            "POL1"
           ]
         },
         "matchingRules": {
           "body": {
             "$.FirstName": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            }
+          },
+          "header": {
+            "X-Market-Id": {
               "combine": "AND",
               "matchers": [
                 {
@@ -176,6 +271,9 @@
         "headers": {
           "Content-Type": [
             "application/json; charset=utf-8"
+          ],
+          "X-Market-Id": [
+            "POL1"
           ]
         },
         "matchingRules": {
@@ -189,6 +287,16 @@
               ]
             },
             "$.LastName": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            }
+          },
+          "header": {
+            "X-Market-Id": {
               "combine": "AND",
               "matchers": [
                 {

@@ -120,8 +120,37 @@ public class ApiGatewayLambdaProviderTests
             var httpContent = requestBody != null 
                 ? new StringContent(requestBody, Encoding.UTF8, "application/json")
                 : new StringContent("", Encoding.UTF8, "application/json");
+            
+            // Add headers from pact file to the request
+            if (request.TryGetProperty("headers", out var headersElement))
+            {
+                foreach (var header in headersElement.EnumerateObject())
+                {
+                    var headerName = header.Name;
+                    var headerValues = header.Value.EnumerateArray().Select(v => v.GetString()).ToArray();
+                    
+                    if (headerName.Equals("Content-Type", StringComparison.OrdinalIgnoreCase))
+                    {
+                        // Skip Content-Type as it's already set by StringContent
+                        continue;
+                    }
+                    
+                    // Add other headers to the request
+                    foreach (var headerValue in headerValues)
+                    {
+                        if (!string.IsNullOrEmpty(headerValue))
+                        {
+                            client.DefaultRequestHeaders.Add(headerName, headerValue);
+                            _output.WriteLine($"  Added header: {headerName} = {headerValue}");
+                        }
+                    }
+                }
+            }
                 
             actualResponse = await client.PostAsync(new Uri(baseUri, path), httpContent);
+            
+            // Clear headers after request to avoid affecting subsequent requests
+            client.DefaultRequestHeaders.Clear();
         }
         else if (method == "GET")
         {

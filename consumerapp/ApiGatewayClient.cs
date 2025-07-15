@@ -15,16 +15,18 @@ public class ApiGatewayClient
         _httpClient = httpClient;
         _baseUrl = baseUrl;
     }
-    public async Task<ApiResponse> SendRequestAsync(Person person)
+
+    public async Task<ApiResponse> SendRequestAsync(Person person, string marketId = "POL1")
     {
         try
         {
             var jsonContent = JsonSerializer.Serialize(person);
             var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
-            
+            content.Headers.Add("X-Market-Id", marketId);
+
             var response = await _httpClient.PostAsync(_baseUrl, content);
             var responseContent = await response.Content.ReadAsStringAsync();
-            
+
             return new ApiResponse
             {
                 StatusCode = response.StatusCode,

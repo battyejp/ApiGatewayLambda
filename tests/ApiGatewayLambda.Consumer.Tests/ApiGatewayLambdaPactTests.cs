@@ -35,6 +35,7 @@ namespace ApiGatewayLambda.Consumer.Tests
                 .UponReceiving("A valid request with both names")
                 .WithRequest(HttpMethod.Post, "/")
                 .WithHeader("Content-Type", "application/json; charset=utf-8")
+                .WithHeader("X-Market-Id", Match.Type("POL1"))
                 .WithJsonBody(new
                 {
                     FirstName = Match.Type("John"),
@@ -74,6 +75,7 @@ namespace ApiGatewayLambda.Consumer.Tests
                 .UponReceiving("A request missing firstname")
                 .WithRequest(HttpMethod.Post, "/")
                 .WithHeader("Content-Type", "application/json; charset=utf-8")
+                .WithHeader("X-Market-Id", Match.Type("POL1"))
                 .WithJsonBody(new
                 {
                     FirstName = null as string,
@@ -111,6 +113,7 @@ namespace ApiGatewayLambda.Consumer.Tests
                 .UponReceiving("A request missing lastname")
                 .WithRequest(HttpMethod.Post, "/")
                 .WithHeader("Content-Type", "application/json; charset=utf-8")
+                .WithHeader("X-Market-Id", Match.Type("POL1"))
                 .WithJsonBody(new
                 {
                     FirstName = Match.Type("John"),
@@ -129,6 +132,45 @@ namespace ApiGatewayLambda.Consumer.Tests
                 // Use the actual consumer application's API client
                 var apiClient = new ApiGatewayClient(_httpClient, ctx.MockServerUri.ToString());
                 var response = await apiClient.SendRequestAsync(new Person{ FirstName = "John" });
+                
+                _output.WriteLine($"Request: {response.RequestJson}");
+                _output.WriteLine($"Response Status: {response.StatusCode}");
+                _output.WriteLine($"Response: {response.Content}");
+                
+                // The test should pass if the mock server matches our definition
+                Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+                Assert.False(response.IsSuccess);
+            });
+        }
+
+        [Fact]
+        public async Task ConsumerApp_RequestMissingXMarketIdHeader_ShouldReturnBadRequest()
+        {
+            // Arrange
+            _pactBuilder
+                .UponReceiving("A request missing X-Market-Id header")
+                .WithRequest(HttpMethod.Post, "/")
+                .WithHeader("Content-Type", "application/json; charset=utf-8")
+                .WithJsonBody(new
+                {
+                    FirstName = Match.Type("John"),
+                    LastName = Match.Type("Doe")
+                })
+                .WillRespond()
+                .WithStatus(HttpStatusCode.BadRequest)
+                .WithHeader("Content-Type", "application/json")
+                .WithJsonBody(new
+                {
+                    error = Match.Type("X-Market-Id header is required.")
+                });
+
+            await _pactBuilder.VerifyAsync(async ctx =>
+            {
+                // Use the actual consumer application's API client
+                var apiClient = new ApiGatewayClient(_httpClient, ctx.MockServerUri.ToString());
+                
+                // Simulate missing X-Market-Id header
+                var response = await apiClient.SendRequestAsync(new Person{ FirstName = "John", LastName = "Doe" }, marketId: null);
                 
                 _output.WriteLine($"Request: {response.RequestJson}");
                 _output.WriteLine($"Response Status: {response.StatusCode}");
