@@ -55,12 +55,12 @@ public class ApiGatewayLambdaProviderTests
     /// </summary>
     private async Task VerifyPactContract(HttpClient client, Uri baseUri)
     {
-        // The test runs from tests/ApiGatewayLambda.Tests/bin/Debug/net8.0, so we need to go up five levels to reach the project root
-        var projectRoot = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "..", "..");
-        var pactFilePath = Path.Combine(projectRoot, "lambda", "pacts", "ApiGatewayLambda.Consumer-ApiGatewayLambda.Provider.json");
+        // The test runs from tests/ApiGatewayLambda.Tests/bin/Debug/net8.0, so we need to go up to the tests directory
+        var testsRoot = Path.Combine(Directory.GetCurrentDirectory().Replace("ApiGatewayLambda.Tests\\bin\\Debug\\net8.0", ""));
+        var pactFilePath = Path.Combine(testsRoot, "lambda", "pacts", "ApiGatewayLambda.Consumer-ApiGatewayLambda.Provider.json");
         
         _output.WriteLine($"Current directory: {Directory.GetCurrentDirectory()}");
-        _output.WriteLine($"Project root: {projectRoot}");
+        _output.WriteLine($"Tests root: {testsRoot}");
         _output.WriteLine($"Pact file path: {pactFilePath}");
         _output.WriteLine($"Pact file exists: {File.Exists(pactFilePath)}");
         _output.WriteLine($"Server URI: {baseUri}");
