@@ -6,7 +6,7 @@ namespace ApiConsumer;
 class Program
 {
     private static readonly HttpClient httpClient = new();
-    private static string? apiEndpoint;
+    private static ApiGatewayClient? apiClient;
 
     static async Task Main(string[] args)
     {
@@ -25,8 +25,11 @@ class Program
         Console.WriteLine($"📋 Using API ID: {apiId}");
         
         // Construct the API Gateway endpoint
-        apiEndpoint = $"http://localhost:4566/restapis/{apiId}/prod/_user_request_/";
+        var apiEndpoint = $"http://localhost:4566/restapis/{apiId}/prod/_user_request_/";
         Console.WriteLine($"🔗 API Gateway endpoint: {apiEndpoint}");
+        
+        // Create the API client
+        apiClient = new ApiGatewayClient(httpClient, apiEndpoint);
         
         Console.WriteLine("Waiting for LocalStack to be ready...");
         
@@ -89,23 +92,11 @@ class Program
     {
         try
         {
-            // Create request with missing lastName
-            var requestData = new
-            {
-                FirstName = "John"
-                // Missing LastName
-            };
+            var response = await apiClient!.SendRequestMissingLastNameAsync("John");
             
-            var jsonContent = JsonSerializer.Serialize(requestData);
-            var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
-            
-            Console.WriteLine($"📤 Sending request: {jsonContent}");
-            
-            var response = await httpClient.PostAsync(apiEndpoint, content);
-            var responseContent = await response.Content.ReadAsStringAsync();
-            
+            Console.WriteLine($"📤 Sending request: {response.RequestJson}");
             Console.WriteLine($"📥 Response Status: {response.StatusCode}");
-            Console.WriteLine($"📥 Response Body: {responseContent}");
+            Console.WriteLine($"📥 Response Body: {response.Content}");
             
             if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
             {
@@ -126,23 +117,11 @@ class Program
     {
         try
         {
-            // Create request with missing firstName
-            var requestData = new
-            {
-                LastName = "Doe"
-                // Missing FirstName
-            };
+            var response = await apiClient!.SendRequestMissingFirstNameAsync("Doe");
             
-            var jsonContent = JsonSerializer.Serialize(requestData);
-            var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
-            
-            Console.WriteLine($"📤 Sending request: {jsonContent}");
-            
-            var response = await httpClient.PostAsync(apiEndpoint, content);
-            var responseContent = await response.Content.ReadAsStringAsync();
-            
+            Console.WriteLine($"📤 Sending request: {response.RequestJson}");
             Console.WriteLine($"📥 Response Status: {response.StatusCode}");
-            Console.WriteLine($"📥 Response Body: {responseContent}");
+            Console.WriteLine($"📥 Response Body: {response.Content}");
             
             if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
             {
@@ -163,23 +142,11 @@ class Program
     {
         try
         {
-            // Create request with both firstName and lastName
-            var requestData = new
-            {
-                FirstName = "John",
-                LastName = "Doe"
-            };
+            var response = await apiClient!.SendValidRequestAsync("John", "Doe");
             
-            var jsonContent = JsonSerializer.Serialize(requestData);
-            var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
-            
-            Console.WriteLine($"📤 Sending request: {jsonContent}");
-            
-            var response = await httpClient.PostAsync(apiEndpoint, content);
-            var responseContent = await response.Content.ReadAsStringAsync();
-            
+            Console.WriteLine($"📤 Sending request: {response.RequestJson}");
             Console.WriteLine($"📥 Response Status: {response.StatusCode}");
-            Console.WriteLine($"📥 Response Body: {responseContent}");
+            Console.WriteLine($"📥 Response Body: {response.Content}");
             
             if (response.StatusCode == System.Net.HttpStatusCode.OK)
             {

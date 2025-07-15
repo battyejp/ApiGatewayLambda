@@ -1,13 +1,8 @@
-using System;
 using System.Net;
-using System.Net.Http;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
 using PactNet;
 using PactNet.Matchers;
-using Xunit;
 using Xunit.Abstractions;
+using ApiConsumer;
 
 namespace ApiGatewayLambda.Consumer.Tests
 {
@@ -32,7 +27,7 @@ namespace ApiGatewayLambda.Consumer.Tests
         }
 
         [Fact]
-        public async Task GetValidRequest_ShouldReturnSuccessResponse()
+        public async Task ConsumerApp_ValidRequest_ShouldReturnSuccessResponse()
         {
             // Arrange
             _pactBuilder
@@ -56,30 +51,22 @@ namespace ApiGatewayLambda.Consumer.Tests
             // Act & Assert
             await _pactBuilder.VerifyAsync(async ctx =>
             {
-                _httpClient.BaseAddress = ctx.MockServerUri;
+                // Use the actual consumer application's API client
+                var apiClient = new ApiGatewayClient(_httpClient, ctx.MockServerUri.ToString());
+                var response = await apiClient.SendValidRequestAsync("John", "Doe");
                 
-                var request = new
-                {
-                    FirstName = "John",
-                    LastName = "Doe"
-                };
-                
-                var jsonContent = JsonSerializer.Serialize(request);
-                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
-                
-                var response = await _httpClient.PostAsync("/", content);
-                var responseContent = await response.Content.ReadAsStringAsync();
-                
+                _output.WriteLine($"Request: {response.RequestJson}");
                 _output.WriteLine($"Response Status: {response.StatusCode}");
-                _output.WriteLine($"Response: {responseContent}");
+                _output.WriteLine($"Response: {response.Content}");
                 
                 // The test should pass if the mock server matches our definition
                 Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+                Assert.True(response.IsSuccess);
             });
         }
 
         [Fact]
-        public async Task GetRequestMissingFirstName_ShouldReturnBadRequest()
+        public async Task ConsumerApp_RequestMissingFirstName_ShouldReturnBadRequest()
         {
             // Arrange
             _pactBuilder
@@ -100,29 +87,22 @@ namespace ApiGatewayLambda.Consumer.Tests
 
             await _pactBuilder.VerifyAsync(async ctx =>
             {
-                _httpClient.BaseAddress = ctx.MockServerUri;
+                // Use the actual consumer application's API client
+                var apiClient = new ApiGatewayClient(_httpClient, ctx.MockServerUri.ToString());
+                var response = await apiClient.SendRequestMissingFirstNameAsync("Doe");
                 
-                var request = new
-                {
-                    LastName = "Doe"
-                };
-                
-                var jsonContent = JsonSerializer.Serialize(request);
-                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
-                
-                var response = await _httpClient.PostAsync("/", content);
-                var responseContent = await response.Content.ReadAsStringAsync();
-                
+                _output.WriteLine($"Request: {response.RequestJson}");
                 _output.WriteLine($"Response Status: {response.StatusCode}");
-                _output.WriteLine($"Response: {responseContent}");
+                _output.WriteLine($"Response: {response.Content}");
                 
                 // The test should pass if the mock server matches our definition
                 Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+                Assert.False(response.IsSuccess);
             });
         }
 
         [Fact]
-        public async Task GetRequestMissingLastName_ShouldReturnBadRequest()
+        public async Task ConsumerApp_RequestMissingLastName_ShouldReturnBadRequest()
         {
             // Arrange
             _pactBuilder
@@ -143,29 +123,22 @@ namespace ApiGatewayLambda.Consumer.Tests
 
             await _pactBuilder.VerifyAsync(async ctx =>
             {
-                _httpClient.BaseAddress = ctx.MockServerUri;
+                // Use the actual consumer application's API client
+                var apiClient = new ApiGatewayClient(_httpClient, ctx.MockServerUri.ToString());
+                var response = await apiClient.SendRequestMissingLastNameAsync("John");
                 
-                var request = new
-                {
-                    FirstName = "John"
-                };
-                
-                var jsonContent = JsonSerializer.Serialize(request);
-                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
-                
-                var response = await _httpClient.PostAsync("/", content);
-                var responseContent = await response.Content.ReadAsStringAsync();
-                
+                _output.WriteLine($"Request: {response.RequestJson}");
                 _output.WriteLine($"Response Status: {response.StatusCode}");
-                _output.WriteLine($"Response: {responseContent}");
+                _output.WriteLine($"Response: {response.Content}");
                 
                 // The test should pass if the mock server matches our definition
                 Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+                Assert.False(response.IsSuccess);
             });
         }
 
         [Fact]
-        public async Task GetRequestWithInvalidMethod_ShouldReturnMethodNotAllowed()
+        public async Task ConsumerApp_RequestWithInvalidMethod_ShouldReturnMethodNotAllowed()
         {
             // Arrange
             _pactBuilder
@@ -181,16 +154,16 @@ namespace ApiGatewayLambda.Consumer.Tests
 
             await _pactBuilder.VerifyAsync(async ctx =>
             {
-                _httpClient.BaseAddress = ctx.MockServerUri;
-                
-                var response = await _httpClient.GetAsync("/");
-                var responseContent = await response.Content.ReadAsStringAsync();
+                // Use the actual consumer application's API client
+                var apiClient = new ApiGatewayClient(_httpClient, ctx.MockServerUri.ToString());
+                var response = await apiClient.SendGetRequestAsync();
                 
                 _output.WriteLine($"Response Status: {response.StatusCode}");
-                _output.WriteLine($"Response: {responseContent}");
+                _output.WriteLine($"Response: {response.Content}");
                 
                 // The test should pass if the mock server matches our definition
                 Assert.Equal(HttpStatusCode.MethodNotAllowed, response.StatusCode);
+                Assert.False(response.IsSuccess);
             });
         }
 

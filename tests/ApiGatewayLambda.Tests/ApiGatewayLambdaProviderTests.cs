@@ -22,16 +22,16 @@ public class ApiGatewayLambdaProviderTests
     }
 
     /// <summary>
-    /// Comprehensive pact provider verification test that validates both functional behavior 
-    /// and contract compliance. This test replaces the previous duplicate test methods by 
-    /// combining functional testing with formal contract verification using manual JSON parsing 
-    /// (more reliable than PactNet v5 framework).
+    /// Comprehensive pact provider verification test that validates contract compliance 
+    /// using manual JSON parsing (more reliable than PactNet v5 framework).
+    /// This test is purely contract-driven - all test scenarios are derived from the 
+    /// pact file, eliminating the need for hardcoded test data maintenance.
     /// </summary>
     [Fact]
     public async Task EnsureProviderApiHonoursPactWithConsumer()
     {
         // Test setup logging
-        _output.WriteLine("=== Starting Comprehensive Pact Provider Verification ===");
+        _output.WriteLine("=== Starting Contract-Driven Pact Provider Verification ===");
         
         using var server = new TestServer();
         await server.StartAsync();
@@ -41,21 +41,17 @@ public class ApiGatewayLambdaProviderTests
 
         using var client = new HttpClient();
         
-        // First: Test that the server is actually responding to all contract scenarios
-        _output.WriteLine("=== Phase 1: Functional Testing ===");
-        await TestAllScenarios(client, server.BaseUri);
-
-        // Second: Verify the contract formally
-        _output.WriteLine("=== Phase 2: Contract Verification ===");
+        // Verify the contract - this tests all scenarios defined in the pact file
         await VerifyPactContract(client, server.BaseUri);
         
         _output.WriteLine("=== All Provider Verification Tests Passed Successfully ===");
     }
 
     /// <summary>
-    /// Verifies the formal pact contract by reading the pact file and validating each 
-    /// interaction against the running provider. Uses manual JSON parsing instead of 
-    /// PactNet v5 framework to avoid known verification issues.
+    /// Verifies the pact contract by reading the pact file and testing each interaction 
+    /// against the running provider. This method is fully contract-driven - all test 
+    /// scenarios, request data, and expected responses are derived from the pact file.
+    /// Uses manual JSON parsing instead of PactNet v5 framework to avoid known verification issues.
     /// </summary>
     private async Task VerifyPactContract(HttpClient client, Uri baseUri)
     {
@@ -89,42 +85,6 @@ public class ApiGatewayLambdaProviderTests
         }
         
         _output.WriteLine("=== All Contract Interactions Verified Successfully ===");
-    }
-
-    /// <summary>
-    /// Tests all contract scenarios with direct functional testing to ensure the provider 
-    /// is actually working correctly before formal contract verification.
-    /// </summary>
-    private async Task TestAllScenarios(HttpClient client, Uri baseUri)
-    {
-        _output.WriteLine("=== Testing All Contract Scenarios ===");
-
-        // Test valid request
-        var validResponse = await client.PostAsync(baseUri, 
-            new StringContent("{\"FirstName\":\"John\",\"LastName\":\"Doe\"}", Encoding.UTF8, "application/json"));
-        _output.WriteLine($"Valid request status: {validResponse.StatusCode}");
-        var validContent = await validResponse.Content.ReadAsStringAsync();
-        _output.WriteLine($"Valid response: {validContent}");
-
-        // Test missing FirstName
-        var missingFirstResponse = await client.PostAsync(baseUri, 
-            new StringContent("{\"LastName\":\"Doe\"}", Encoding.UTF8, "application/json"));
-        _output.WriteLine($"Missing FirstName status: {missingFirstResponse.StatusCode}");
-        var missingFirstContent = await missingFirstResponse.Content.ReadAsStringAsync();
-        _output.WriteLine($"Missing FirstName response: {missingFirstContent}");
-
-        // Test missing LastName
-        var missingLastResponse = await client.PostAsync(baseUri, 
-            new StringContent("{\"FirstName\":\"John\"}", Encoding.UTF8, "application/json"));
-        _output.WriteLine($"Missing LastName status: {missingLastResponse.StatusCode}");
-        var missingLastContent = await missingLastResponse.Content.ReadAsStringAsync();
-        _output.WriteLine($"Missing LastName response: {missingLastContent}");
-
-        // Test invalid method (GET)
-        var getResponse = await client.GetAsync(baseUri);
-        _output.WriteLine($"GET method status: {getResponse.StatusCode}");
-        var getContent = await getResponse.Content.ReadAsStringAsync();
-        _output.WriteLine($"GET response: {getContent}");
     }
 
     /// <summary>
